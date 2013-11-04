@@ -68,9 +68,21 @@ class UnicodeColumn(Column):
     """A column containing Unicode data.
 
     Emits UTF-8 when asked to output text.
+
+    encoding
+        The Unicode encoding to use. Defaults to utf-8.
     """
+    def __init__(self, encoding='utf-8', *args, **kwargs):
+        super(UnicodeColumn, self).__init__(*args, **kwargs)
+        self.encoding = encoding
+
+    def to_python(self, value):
+        if isinstance(value, unicode):
+            return value
+        return value.decode(self.encoding)
+
     def to_string(self, value):
-        return value.encode('utf-8')
+        return value.encode(self.encoding)
 
 
 class IntegerColumn(Column):
@@ -91,6 +103,10 @@ class FloatWithCommaSeparatorsColumn(Column):
     Note that this is NOT intended to handle "Euro" floats, in which
     a comma is used as the decimal separator.
     """
+    def to_string(self, value):
+        # NB - Requires Python >= 2.7
+        return "{:,}".format(value)
+
     def to_python(self, value):
         if isinstance(value, basestring):
             return float(value.replace(',', ''))
@@ -124,6 +140,9 @@ class BooleanColumn(Column):
         super(BooleanColumn, self).__init__(*args, **kwargs)
 
     def to_python(self, value):
+        if isinstance(value, bool):
+            return value
+
         bool_map = self._bool_map
         str_value = str(value).lower()
         if str_value not in bool_map:
