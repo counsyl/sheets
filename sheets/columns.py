@@ -2,17 +2,26 @@ import functools
 import datetime
 import decimal
 
-class Column:
+from itertools import count
+
+
+class Column(object):
+    """An individual column within a CSV file.
+    This serves as a base for attributes and methods that are common to all
+    types of columns. Subclasses of Column will define behavior for more
+    specific data types.
     """
-    An individual column within a CSV file. This serves as a base for attributes
-    and methods that are common to all types of columns. Subclasses of Column
-    will define behavior for more specific data types.
-    """
+
+    _count = count()  # global counter to maintain attr order this can be
+                      # removed in python 3.0 with metaclass.__prepare__.
 
     def __init__(self, title=None, required=True):
         self.title = title
         self.required = required
         self._validators = [self.to_python]
+
+        # Hack to maintain class attribute order in Python < 3.0
+        self.counter = next(self.__class__._count)
 
     def attach_to_class(self, cls, name, dialect):
         self.cls = cls
@@ -87,7 +96,7 @@ class DateColumn(Column):
         See http://docs.python.org/library/datetime.html for details
     """
 
-    def __init__(self, *args, format='%Y-%m-%d', **kwargs):
+    def __init__(self, format='%Y-%m-%d', *args, **kwargs):
         super(DateColumn, self).__init__(*args, **kwargs)
         self.format = format
 
@@ -105,4 +114,3 @@ class DateColumn(Column):
         Format a date according to self.format and return that as a string.
         """
         return value.strftime(self.format)
-
