@@ -180,8 +180,10 @@ class DateTimeColumn(Column):
     def to_python(self, value):
         """Parse a string value according to self.format.
         """
-        if isinstance(value, datetime.date):
+        if isinstance(value, datetime.datetime):
             return value
+        elif isinstance(value, datetime.date):
+            return datetime.datetime(value.year, value.month, value.day)
 
         for format in self.input_formats:
             try:
